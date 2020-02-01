@@ -30,29 +30,34 @@ $spreadsheet_lectura = $reader->load($ExcelAx);
 $sheet_lectura = $spreadsheet_lectura->getActiveSheet();
 echo '<table border="1" cellpading="8" style="margin-left:250px;">';
 
-//Variables de Lectura
+//Se abre el fopen para poder escribir en el buffer de los archivos 
+$handler=fopen("fechas.json", "w+");
 
-$nombre_cliente=$sheet_lectura->getCellByColumnAndRow(3,9)->getValue();
-$numero_cliente=$sheet_lectura->getCellByColumnAndRow(3,10)->getValue();
-$fecha_inicio=$sheet_lectura->getCellByColumnAndRow(3,11)->getValue();
-$fecha_final=$sheet_lectura->getCellByColumnAndRow(3,12)->getValue();
-$numero_documento=$sheet_lectura->getCellByColumnAndRow(6,2)->getValue();
-$fecha=$sheet_lectura->getCellByColumnAndRow(6,4)->getValue();
-$revision=$sheet_lectura->getCellByColumnAndRow(6,6)->getValue();
+foreach ($sheet_lectura->getRowIterator(15) as $row) {
 
-echo '<tr>
-        <td>'.$nombre_cliente.'</td>
-        <td>'.$numero_cliente.'</td>
-        <td>'.$fecha_inicio.'</td>
-        <td>'.$fecha_final.'</td>
-        <td>'.$numero_documento.'</td>
-        <td>'.$fecha.'</td>
-        <td>'.$revision.'</td>
+  if(($sheet_lectura->getCellByColumnAndRow(2,$row->getRowIndex())->getCalculatedValue()<>0) && ($sheet_lectura->getCellByColumnAndRow(2,$row->getRowIndex())->getCalculatedValue() <> null)){
+    $date=$sheet_lectura->getCellByColumnAndRow(2,$row->getRowIndex())->getValue();
+    $date1=\PhpOffice\PhpSpreadsheet\Shared\Date::ExcelToTimestamp($date);
+    $fecha=date("d-m-y",$date1);
+
+    echo '<tr>
+      <td>'.$fecha.'</td>
       </tr>';
+  }
+  //Creación del JSON
+  $arreglo = array('fechas' => $fecha);
+  $nuevojson = json_encode($arreglo);
+  var_dump($nuevojson);
+  
+  //Escritura del JSON
+  fwrite($handler, $nuevojson);
+  
+}
 
+//Se cierra el buffer de escritura
+fclose($handler);
 
 echo '</table>';
-
 echo "Datos extraidos con exito";
 
 ?>
